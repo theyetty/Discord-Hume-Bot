@@ -7,6 +7,7 @@ const shared = require('./shared');
 
 let chatGroupId = null;
 let reconnectAttempts = 0;
+let responseTimer = null;
 
 async function setupHumeAI(connection, client) {
     if (shared.isConnecting) return;
@@ -67,6 +68,11 @@ async function setupHumeAI(connection, client) {
 }
 
 function handleHumeMessage(message, connection, client) {
+    if (!message || typeof message !== 'object') {
+        log('Received invalid message from Hume AI');
+        return;
+    }
+
     switch (message.type) {
         case 'audio_output':
             shared.audioQueue.push(message.data);
@@ -76,10 +82,16 @@ function handleHumeMessage(message, connection, client) {
             break;
         case 'assistant_message':
             shared.botMessageBuffer.push(message.message.content);
+            if (responseTimer) {
+                clearTimeout(responseTimer);
+                responseTimer = null;
+            }
+            // Don't reset lastUserMessage here, as we might need it for the next interaction
             break;
         case 'user_message':
             if (message.message && message.message.content) {
                 log(`User: ${message.message.content}`);
+                lastUserMessage = message.message.content;  // Update lastUserMessage here
                 addToContext('User', message.message.content);
                 shared.isWaitingForEnd = false;
                 log('Processing your input...');
@@ -100,11 +112,34 @@ function handleHumeMessage(message, connection, client) {
             shared.isProcessing = false;
             break;
         case 'chat_metadata':
-            // Log the metadata or handle it as needed
-            log('Received chat metadata:', message);
+            log('Received chat metadata:');
+            log(JSON.stringify(message, null, 2));
+            break;
+        case 'error':
+            handleHumeError(message, connection, client);
             break;
         default:
             log(`Unhandled message type: ${message.type}`);
+            log(JSON.stringify(message, null, 2));
+    }
+}
+
+function handleHumeError(message, connection, client) {
+    log(`Hume AI Error: ${JSON.stringify(message)}`);
+    
+    switch(message.code) {
+        case 'E0101':
+            log(`Payload parse error: ${message.message}`);
+            log(`Last sent message: ${JSON.stringify(shared.lastSentMessage)}`);
+            // Consider reviewing recent changes to message formats
+            break;
+        case 'AUTHENTICATION_ERROR':
+            log('Authentication error. Please check your Hume AI credentials.');
+            break;
+        default:
+            log(`Unknown error occurred with Hume AI: ${message.message}`);
+            // Consider implementing a reconnection mechanism here
+            // reconnectToHumeAI(connection, client);
     }
 }
 
@@ -121,6 +156,8 @@ function sendSessionSettings() {
             }
         }
     };
+
+    
     try {
         shared.humeSocket.send(JSON.stringify(sessionSettings));
     } catch (error) {

@@ -6,9 +6,15 @@ const { log } = require('./utils');
 const shared = require('./shared');
 const WebSocket = require('ws');
 
-let currentAudioBuffer = Buffer.alloc(0);
-let isWaitingForEnd = false;
 let audioPlayer = null;
+
+
+let lastUserInputTime = 0;
+let lastUserMessage = null;
+
+const BUFFER_DURATION = 500; // Buffer 500ms of audio before sending
+const SAMPLE_RATE = 48000;
+const BYTES_PER_SAMPLE = 2; // 16-bit audio
 
 function setupAudioListener(connection, client) {
     const receiver = connection.receiver;
@@ -57,23 +63,40 @@ function handleAudioStream(audioStream) {
         rate: 48000,
     });
 
+    audioStream.on('error', (error) => {
+        console.error('Audio stream error:', error);
+    });
+
+    opusDecoder.on('error', (error) => {
+        console.error('Opus decoder error:', error);
+    });
+
+    let currentAudioBuffer = Buffer.alloc(0);
+    let lastSendTime = Date.now();
+
     audioStream.pipe(opusDecoder);
 
     opusDecoder.on('data', (chunk) => {
         currentAudioBuffer = Buffer.concat([currentAudioBuffer, chunk]);
-        sendAudioChunk(currentAudioBuffer.toString('base64'));
-        currentAudioBuffer = Buffer.alloc(0);
+        
+        const bufferDuration = (currentAudioBuffer.length / BYTES_PER_SAMPLE) / SAMPLE_RATE * 1000;
+        const timeSinceLastSend = Date.now() - lastSendTime;
+
+        if (bufferDuration >= BUFFER_DURATION || timeSinceLastSend >= BUFFER_DURATION) {
+            sendAudioChunk(currentAudioBuffer.toString('base64'));
+            currentAudioBuffer = Buffer.alloc(0);
+            lastSendTime = Date.now();
+        }
     });
 
     audioStream.on('end', () => {
-        sendAudioChunk(currentAudioBuffer.toString('base64'));
-        currentAudioBuffer = Buffer.alloc(0);
-
+        if (currentAudioBuffer.length > 0) {
+            sendAudioChunk(currentAudioBuffer.toString('base64'));
+            currentAudioBuffer = Buffer.alloc(0);
+        }
         log('Audio stream ended');
-        isWaitingForEnd = true;
     });
 }
-
 
 async function playNextAudio(connection) {
     if (shared.audioQueue.length === 0) {
@@ -111,7 +134,6 @@ function stopAudio() {
     shared.isPlaying = false;
 }
 
-
 function sendAudioChunk(base64Audio) {
     if (shared.humeSocket && shared.humeSocket.readyState === WebSocket.OPEN) {
         const audioInput = {
@@ -120,17 +142,6 @@ function sendAudioChunk(base64Audio) {
             context: shared.conversationContext,
         };
         shared.humeSocket.send(JSON.stringify(audioInput));
-    }
-}
-
-function sendEndOfStream() {
-    if (shared.humeSocket && shared.humeSocket.readyState === WebSocket.OPEN) {
-        const endOfStreamMessage = {
-            type: 'end_of_stream',
-            context: shared.conversationContext,
-
-        };
-        shared.humeSocket.send(JSON.stringify(endOfStreamMessage));
     }
 }
 
