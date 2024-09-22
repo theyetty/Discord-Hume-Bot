@@ -24,7 +24,7 @@ async function setupHumeAI(connection, client) {
         
         log(`Attempting to connect to Hume AI: ${url}`);
         
-        shared.humeSocket = new WebSocket(url);  // Assign to shared.humeSocket instead of humeSocket
+        shared.humeSocket = new WebSocket(url);  
 
         shared.humeSocket.on('open', () => {
             log('Connected to Hume AI');
@@ -87,12 +87,11 @@ function handleHumeMessage(message, connection, client) {
                 clearTimeout(responseTimer);
                 responseTimer = null;
             }
-            // Don't reset lastUserMessage here, as we might need it for the next interaction
             break;
         case 'user_message':
             if (message.message && message.message.content) {
                 log(`User: ${message.message.content}`);
-                lastUserMessage = message.message.content;  // Update lastUserMessage here
+                lastUserMessage = message.message.content;  
                 addToContext('User', message.message.content);
                 shared.isWaitingForEnd = false;
                 log('Processing your input...');
@@ -132,7 +131,6 @@ function handleHumeError(message, connection, client) {
         case 'E0101':
             log(`Payload parse error: ${message.message}`);
             log(`Last sent message: ${JSON.stringify(shared.lastSentMessage)}`);
-            // Consider reviewing recent changes to message formats
             break;
         case 'AUTHENTICATION_ERROR':
             log('Authentication error. Please check your Hume AI credentials.');
