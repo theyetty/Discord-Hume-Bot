@@ -98,7 +98,7 @@ async function playNextAudio(connection) {
             setTimeout(() => {
                 playNextAudio(connection);
                 resolve();
-            }, 100); // Small delay to ensure the audio player is ready for the next clip
+            }, 1000); // Small delay to ensure the audio player is ready for the next clip
         });
     });
 }
