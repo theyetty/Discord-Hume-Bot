@@ -144,14 +144,14 @@ function sendAudioChunk(base64Audio) {
                 channels: 1,
                 encoding: "linear16",
                 sample_rate: 48000
-            },
-            system_prompt: config.SYSTEM_PROMPT
+            }
         };
         shared.humeSocket.send(JSON.stringify(audioInput));
     } else {
         log('WebSocket is not open. Cannot send audio chunk.');
     }
 }
+
 
 module.exports = {
     setupAudioListener,

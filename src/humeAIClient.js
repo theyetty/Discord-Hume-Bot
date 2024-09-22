@@ -4,6 +4,7 @@ const { log, startPing } = require('./utils');
 const { MAX_RECONNECT_ATTEMPTS } = require('./constants');
 const { setupAudioListener, playNextAudio, stopAudio } = require('./audioHandler');
 const shared = require('./shared');
+const { getContext } = require('./contextManager');
 
 let chatGroupId = null;
 let reconnectAttempts = 0;
@@ -138,8 +139,7 @@ function handleHumeError(message, connection, client) {
             break;
         default:
             log(`Unknown error occurred with Hume AI: ${message.message}`);
-            // Consider implementing a reconnection mechanism here
-            // reconnectToHumeAI(connection, client);
+
     }
 }
 
@@ -152,14 +152,15 @@ function sendSessionSettings() {
             sample_rate: 48000,
             speaker_detection: true,
             vad: {
-                enabled: false
+                enabled: true
             }
-        }
+        },
+        context: getContext() 
     };
 
-    
     try {
         shared.humeSocket.send(JSON.stringify(sessionSettings));
+        shared.lastSentMessage = sessionSettings;  
     } catch (error) {
         log(`Error sending session settings: ${error}`);
     }
