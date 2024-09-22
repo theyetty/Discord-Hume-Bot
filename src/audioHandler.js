@@ -3,7 +3,6 @@ const { Readable } = require('stream');
 const prism = require('prism-media');
 const { createAudioPlayer, createAudioResource, AudioPlayerStatus, EndBehaviorType } = require('@discordjs/voice');
 const { log } = require('./utils');
-const { MIN_AUDIO_LENGTH } = require('./constants');
 const shared = require('./shared');
 const WebSocket = require('ws');
 
@@ -62,18 +61,14 @@ function handleAudioStream(audioStream) {
 
     opusDecoder.on('data', (chunk) => {
         currentAudioBuffer = Buffer.concat([currentAudioBuffer, chunk]);
-        
-        if (currentAudioBuffer.length >= MIN_AUDIO_LENGTH) { // Send only if buffer length is above the minimum threshold
-            sendAudioChunk(currentAudioBuffer.toString('base64'));
-            currentAudioBuffer = Buffer.alloc(0);
-        }
+        sendAudioChunk(currentAudioBuffer.toString('base64'));
+        currentAudioBuffer = Buffer.alloc(0);
     });
 
     audioStream.on('end', () => {
-        if (currentAudioBuffer.length > 0) {
-            sendAudioChunk(currentAudioBuffer.toString('base64'));
-            currentAudioBuffer = Buffer.alloc(0);
-        }
+        sendAudioChunk(currentAudioBuffer.toString('base64'));
+        currentAudioBuffer = Buffer.alloc(0);
+
         log('Audio stream ended');
         isWaitingForEnd = true;
     });

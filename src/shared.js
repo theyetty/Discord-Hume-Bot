@@ -4,6 +4,7 @@ let audioQueue = [];
 let isPlaying = false;
 let isConnecting = false;
 let isWaitingForEnd = false;
+let lastSentMessage = null;
 
 module.exports = {
     get humeSocket() { return humeSocket; },
@@ -17,5 +18,7 @@ module.exports = {
     get isConnecting() { return isConnecting; },
     set isConnecting(value) { isConnecting = value; },
     get isWaitingForEnd() { return isWaitingForEnd; },
-    set isWaitingForEnd(value) { isWaitingForEnd = value; },  
+    set isWaitingForEnd(value) { isWaitingForEnd = value; },
+    get lastSentMessage() { return lastSentMessage; },
+    set lastSentMessage(value) { lastSentMessage = value; },
 };

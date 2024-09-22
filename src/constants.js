@@ -1,5 +1,4 @@
 module.exports = {
     MAX_RECONNECT_ATTEMPTS: 5,
-    MIN_AUDIO_LENGTH: 0,
     MAX_CONTEXT_LENGTH: 10,
 };
