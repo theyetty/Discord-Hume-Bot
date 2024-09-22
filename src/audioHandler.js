@@ -5,6 +5,7 @@ const { createAudioPlayer, createAudioResource, AudioPlayerStatus, EndBehaviorTy
 const { log } = require('./utils');
 const shared = require('./shared');
 const WebSocket = require('ws');
+const config = require('./config');
 
 let audioPlayer = null;
 
@@ -139,9 +140,16 @@ function sendAudioChunk(base64Audio) {
         const audioInput = {
             type: 'audio_input',
             data: base64Audio,
-            context: shared.conversationContext,
+            audio: {
+                channels: 1,
+                encoding: "linear16",
+                sample_rate: 48000
+            },
+            system_prompt: config.SYSTEM_PROMPT
         };
         shared.humeSocket.send(JSON.stringify(audioInput));
+    } else {
+        log('WebSocket is not open. Cannot send audio chunk.');
     }
 }
 

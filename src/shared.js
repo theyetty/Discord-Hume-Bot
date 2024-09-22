@@ -5,6 +5,7 @@ let isPlaying = false;
 let isConnecting = false;
 let isWaitingForEnd = false;
 let lastSentMessage = null;
+let conversationContext = '';
 
 module.exports = {
     get humeSocket() { return humeSocket; },

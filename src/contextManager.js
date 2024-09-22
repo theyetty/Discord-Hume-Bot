@@ -1,5 +1,5 @@
-const { MAX_CONTEXT_LENGTH } = require('./constants');
 
+MAX_CONTEXT_LENGTH = 1280;
 let conversationContext = [];
 
 function addToContext(speaker, message) {
