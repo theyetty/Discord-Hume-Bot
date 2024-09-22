@@ -15,27 +15,37 @@ function setupAudioListener(connection, client) {
     const receiver = connection.receiver;
     log('Setting up audio listener');
 
-    receiver.speaking.on('start', (userId) => {
-        log(`User ${userId} started speaking`);
-        if (shared.humeSocket && shared.humeSocket.readyState === WebSocket.OPEN) {
-            const audioStream = receiver.subscribe(userId, {
-                end: {
-                    behavior: EndBehaviorType.AfterSilence,
-                    duration: 1000,
-                },
-            });
-            handleAudioStream(audioStream);
-        } else {
-            log(`WebSocket is not open. Current state: ${shared.humeSocket ? shared.humeSocket.readyState : 'null'}`);
-            if (!shared.isConnecting) {
-                log('Attempting to reconnect...');
-                setupHumeAI(connection, client);
+    receiver.speaking.on('start', async (userId) => {
+        try {
+            const user = await client.users.fetch(userId);
+            log(`User ${user.username} started speaking`);
+            if (shared.humeSocket && shared.humeSocket.readyState === WebSocket.OPEN) {
+                const audioStream = receiver.subscribe(userId, {
+                    end: {
+                        behavior: EndBehaviorType.AfterSilence,
+                        duration: 1000,
+                    },
+                });
+                handleAudioStream(audioStream);
+            } else {
+                log(`WebSocket is not open. Current state: ${shared.humeSocket ? shared.humeSocket.readyState : 'null'}`);
+                if (!shared.isConnecting) {
+                    log('Attempting to reconnect...');
+                    setupHumeAI(connection, client);
+                }
             }
+        } catch (error) {
+            log(`Error fetching user: ${error}`);
         }
     });
 
-    receiver.speaking.on('end', (userId) => {
-        log(`User ${userId} stopped speaking`);
+    receiver.speaking.on('end', async (userId) => {
+        try {
+            const user = await client.users.fetch(userId);
+            log(`User ${user.username} stopped speaking`);
+        } catch (error) {
+            log(`Error fetching user: ${error}`);
+        }
     });
 
     log('Audio listener setup complete');

@@ -31,7 +31,7 @@ function initializeDiscordClient(client) {
     
             connection.on(VoiceConnectionStatus.Ready, () => {
                 log(`Joined voice channel of user ${message.member.id}`);
-                setupHumeAI(connection);
+                setupHumeAI(connection, client); // Pass 'client' here
             });
         } else if (message.content === '!join') {
             message.reply('You need to be in a voice channel to use this command.');
