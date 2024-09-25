@@ -2,7 +2,7 @@ const WebSocket = require('ws');
 const { addToContext } = require('./contextManager');
 const { log, startPing } = require('./utils');
 const { MAX_RECONNECT_ATTEMPTS } = require('./constants');
-const { setupAudioListener, playNextAudio, stopAudio, playUnderstandingSound, playNotUnderstoodSound } = require('./audioHandler');
+const { setupAudioListener, playNextAudio, stopAudio, playUnderstandingSound } = require('./audioHandler');
 const shared = require('./shared');
 const { getContext } = require('./contextManager');
 
@@ -102,7 +102,6 @@ async function handleHumeMessage(message, connection, client) {
                 shared.isWaitingForEnd = false;
             } else {
                 log('Received user message with no content');
-                await playNotUnderstoodSound(connection);
             }
             break;
         case 'user_interruption':
@@ -126,7 +125,6 @@ async function handleHumeMessage(message, connection, client) {
             break;
         case 'error':
             handleHumeError(message, connection, client);
-            await playNotUnderstoodSound(connection);
             break;
         case 'understanding':
             if (message.understood) {

@@ -147,10 +147,7 @@ function playUnderstandingSound(connection) {
     return playSound(connection, 'understood.wav');
 }
 
-function playNotUnderstoodSound(connection) {
-    console.log('Playing not understood sound');
-    return playSound(connection, 'not_understood.wav');
-}
+
 
 function playSound(connection, soundFile) {
     return new Promise((resolve) => {
@@ -175,5 +172,4 @@ module.exports = {
     stopAudio,
     sendAudioChunk,
     playUnderstandingSound,
-    playNotUnderstoodSound
 };

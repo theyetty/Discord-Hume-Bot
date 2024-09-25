@@ -4,7 +4,8 @@
   "description": "Interface to allow people to speak to Hume AI in Discord channels",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node index.js"
   },
   "author": "YettyBox",
   "license": "ISC",
