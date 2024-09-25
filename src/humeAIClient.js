@@ -2,7 +2,7 @@ const WebSocket = require('ws');
 const { addToContext } = require('./contextManager');
 const { log, startPing } = require('./utils');
 const { MAX_RECONNECT_ATTEMPTS } = require('./constants');
-const { setupAudioListener, playNextAudio, stopAudio } = require('./audioHandler');
+const { setupAudioListener, playNextAudio, stopAudio, playUnderstandingSound, playNotUnderstoodSound } = require('./audioHandler');
 const shared = require('./shared');
 const { getContext } = require('./contextManager');
 
@@ -68,7 +68,7 @@ async function setupHumeAI(connection, client) {
     }
 }
 
-function handleHumeMessage(message, connection, client) {
+async function handleHumeMessage(message, connection, client) {
     if (!message || typeof message !== 'object') {
         log('Received invalid message from Hume AI');
         return;
@@ -85,27 +85,36 @@ function handleHumeMessage(message, connection, client) {
             shared.botMessageBuffer.push(message.message.content);
             if (responseTimer) {
                 clearTimeout(responseTimer);
-                responseTimer = null;
             }
+            responseTimer = setTimeout(() => {
+                if (shared.botMessageBuffer.length > 0) {
+                    const botResponse = shared.botMessageBuffer.join(' ');
+                    addToContext('Bot', botResponse);
+                    shared.botMessageBuffer = [];
+                }
+            }, 0); // Wait for 1 second before processing
             break;
         case 'user_message':
             if (message.message && message.message.content) {
-                log(`User: ${message.message.content}`);
+                await playUnderstandingSound(connection);
                 lastUserMessage = message.message.content;  
                 addToContext('User', message.message.content);
                 shared.isWaitingForEnd = false;
-                log('Processing your input...');
             } else {
                 log('Received user message with no content');
+                await playNotUnderstoodSound(connection);
             }
             break;
         case 'user_interruption':
             stopAudio();
             break;
         case 'assistant_end':
+            if (responseTimer) {
+                clearTimeout(responseTimer);
+                responseTimer = null;
+            }
             if (shared.botMessageBuffer.length > 0) {
                 const botResponse = shared.botMessageBuffer.join(' ');
-                log(`Bot: ${botResponse}`);
                 addToContext('Bot', botResponse);
                 shared.botMessageBuffer = [];
             }
@@ -117,6 +126,13 @@ function handleHumeMessage(message, connection, client) {
             break;
         case 'error':
             handleHumeError(message, connection, client);
+            await playNotUnderstoodSound(connection);
+            break;
+        case 'understanding':
+            if (message.understood) {
+                log('Bot understood the message');
+                playUnderstandingSound(connection);
+            }
             break;
         default:
             log(`Unhandled message type: ${message.type}`);
