@@ -11,6 +11,7 @@ Hume allows for real-time audio processing and understanding. It can be used to 
 
 It uses the OpusScript library to handle the audio stream and the WebSocket library to connect to the Hume API.
 
+## Example Video
 [![Example](https://img.youtube.com/vi/wBLXWomGG8M/0.jpg)](https://www.youtube.com/watch?v=wBLXWomGG8M)
 
 ## Getting Started
