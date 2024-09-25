@@ -11,6 +11,7 @@ Hume allows for real-time audio processing and understanding. It can be used to 
 
 It uses the OpusScript library to handle the audio stream and the WebSocket library to connect to the Hume API.
 
+[![Example](https://img.youtube.com/vi/wBLXWomGG8M/0.jpg)](https://www.youtube.com/watch?v=wBLXWomGG8M)
 
 ## Getting Started
 
@@ -71,3 +72,4 @@ You can set these permissions when inviting the bot to your server or by adjusti
 2. The bot will play a sound when it recognises your message and again when it understands you, if you do not hear this sound it did not understand you
 3. You can interupt the bot, but please note after the sound its heard you it could take a few seconds to respond so be careful not to interupt it or things will get cut off, this is a limitation of voice bots right now
 4. The bot will timeout based on the Inactivity Timeout set in the configuration, it will attempt to reconnect
+
